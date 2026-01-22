@@ -156,14 +156,14 @@ cython_debug/
 .idea/
 
 # 图片文件
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
-*.webp
-*.svg
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.bmp
+# *.tiff
+# *.webp
+# *.svg
 
 
 # 模型权重 / 检查点文件
