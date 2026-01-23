@@ -5,6 +5,7 @@
 #include <libavutil/rational.h>
 #include <npp.h>
 #include <nppi_geometry_transforms.h>
+#include <nppi_color_conversion.h>
 
 #include <stdexcept>
 
@@ -112,7 +113,7 @@ void Decoder::cleanup() {
     if (hw_device_ctx) av_buffer_unref(&hw_device_ctx);
 }
 
-torch::Tensor Decoder::next_frame() {
+std::pair<torch::Tensor, double> Decoder::next_frame() {
     auto process_frame = [&](AVFrame* f) -> torch::Tensor {
         if (f->format != AV_PIX_FMT_CUDA) {
             std::cerr << "[Decoder] Frame format is not CUDA: " << f->format << std::endl;
@@ -190,7 +191,7 @@ torch::Tensor Decoder::next_frame() {
         return resized;
     };
 
-    if (finished) return torch::Tensor();
+    if (finished) return {torch::Tensor(), -1.0};
 
     while (true) {
         int ret = avcodec_receive_frame(codec_ctx, frame);
@@ -201,19 +202,26 @@ torch::Tensor Decoder::next_frame() {
                 continue;
             }
             output_this_frame = enable_frame_skip ? false : true;
+            
+            double pts = 0.0;
+            if (frame->pts != AV_NOPTS_VALUE) {
+                AVRational tb = format_ctx->streams[video_stream_idx]->time_base;
+                pts = frame->pts * av_q2d(tb);
+            }
+            
             torch::Tensor out = process_frame(frame);
             av_frame_unref(frame);
-            return out;
+            return {out, pts};
         } else if (ret == AVERROR_EOF) {
             finished = true;
-            return torch::Tensor();
+            return {torch::Tensor(), -1.0};
         } else if (ret != AVERROR(EAGAIN)) {
             throw std::runtime_error("[Decoder] Error receiving frame: " + std::to_string(ret));
         }
 
         if (flushing) {
             finished = true;
-            return torch::Tensor();
+            return {torch::Tensor(), -1.0};
         }
 
         ret = av_read_frame(format_ctx, packet);

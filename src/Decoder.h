@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 
+#include <utility>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -19,7 +21,7 @@ public:
     Decoder(const std::string &filename, bool enable_frame_skip = false, int output_width = 0, int output_height = 0);
     ~Decoder();
 
-    torch::Tensor next_frame();
+    std::pair<torch::Tensor, double> next_frame();
     int           get_width() const { return width; }
     int           get_height() const { return height; }
     double        get_fps() const { return fps; }

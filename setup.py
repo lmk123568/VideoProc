@@ -56,6 +56,8 @@ setup(
             MODULE_NAME,
             [
                 "src/Decoder.cpp",
+                "src/Encoder.cpp",
+                "src/rgb_to_nv12.cu",
                 "src/bindings.cpp",
             ],
             include_dirs=include_dirs,

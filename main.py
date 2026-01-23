@@ -25,9 +25,18 @@ class VideoPipe(mp.Process):
 
         decoder = nv.Decoder(
             self.input_url,
-            enable_frame_skip=False,
+            enable_frame_skip=True,
             output_width=1024,
             output_height=576,
+        )
+
+        encoder = nv.Encoder(
+            output_url=self.output_url,
+            width=decoder.get_width(),
+            height=decoder.get_height(),
+            fps=25.0,
+            codec="h264",
+            bitrate=2_000_000,
         )
 
         yolo = YOLO26DetTRT(
@@ -47,9 +56,12 @@ class VideoPipe(mp.Process):
             t0 = time.time()
 
             try:
-                frame = decoder.next_frame()
+                frame, pts = decoder.next_frame()
             except:
                 sys.exit(1)
+
+            if frame is None or frame.numel() == 0:
+                break
 
             frame_count += 1
 
@@ -59,11 +71,11 @@ class VideoPipe(mp.Process):
 
             t2 = time.time()
 
-            # track_results = tracker.update(det_results)
+            # encoder.encode(frame)
 
             t3 = time.time()
 
-            # event_handler(track_results, frame)
+            encoder.encode(frame, pts)
 
             t4 = time.time()
 
@@ -92,12 +104,20 @@ if __name__ == "__main__":
     args = [
         {
             "input_url": "rtsp://172.16.3.210:8554/live/172.16.3.107",
-            "output_url": "rtsp://172.16.3.210:8554/live/test_outq",
+            "output_url": "rtmp://172.16.3.210:1935/live/test_outq1",
         },
         {
             "input_url": "rtsp://172.16.3.210:8554/live/172.16.3.107",
-            "output_url": "rtsp://172.16.3.210:8554/live/test_outq2",
-        }
+            "output_url": "rtmp://172.16.3.210:1935/live/test_outq2",
+        },
+        {
+            "input_url": "rtsp://172.16.3.210:8554/live/172.16.3.107",
+            "output_url": "rtmp://172.16.3.210:1935/live/test_outq3",
+        },
+        {
+            "input_url": "rtsp://172.16.3.210:8554/live/172.16.3.107",
+            "output_url": "rtmp://172.16.3.210:1935/live/test_outq4",
+        },
     ]
 
     mp.set_start_method("spawn")
