@@ -1,45 +1,45 @@
-# PyNvVideoPipe
+<p style="" align="center">
+  <img src="./assets/logo.png" alt="Logo" width="20%">
+  <h1>PyNvVideoPipe</h1>
+</p>
+<p style="margin:0px" align="center">
+    <img src="https://img.shields.io/badge/license-BSD--2-blue.svg?&logo=c&logoColor=white&style=for-the-badge">
+    <img src="https://img.shields.io/badge/CUDA-12.8-76B900?&logo=nvidia&logoColor=white&style=for-the-badge">
+    <img src="https://img.shields.io/badge/OS-Linux-FCC624?&logo=linux&logoColor=white&style=for-the-badge">
+</p>
 
-![License](https://img.shields.io/badge/license-BSD_2--Clause-blue.svg?style=for-the-badge)
-![Nvidia](https://img.shields.io/badge/CUDA-12.6.3-76B900?&logoColor=white&style=for-the-badge)
-![OS](https://img.shields.io/badge/OS-Linux-FCC624?&logoColor=white&style=for-the-badge)
-
-High-Performance Video Processing Pipeline in Python, Powered by NVIDIA CUDA
-
-Supports multi-stream, multi-GPU, and multi-model inference
-
-Minimizes memory copies and CPU–GPU data transfers for maximum efficiency
+---
 
 基于 NVIDIA CUDA 的 Python 高性能视频处理流水线实现
 
-支持多路视频流、多 GPU 与多模型推理
+⭐ 多进程绕过 GIL 限制，支持多流、多 GPU 与多模型推理
 
-更少的显存拷贝和 CPU–GPU 数据拷贝，提升推理效率
+⭐ 减少 Host-Device 数据拷贝和 GPU 显存冗余拷贝，提升推理效率
 
-|                                                           | Open Source开源 |      Learning Curve学习成本      | Developer-Friendliness二次开发友好度 |          Performance性能          |
-| :-------------------------------------------------------: | :-------------: | :------------------------------: | :----------------------------------: | :-------------------------------: |
-| [DeepStream](https://developer.nvidia.com/deepstream-sdk) |        ❌        |               High               |                 Low                  |               High                |
-| [VideoPipe](https://github.com/sherlockchou86/VideoPipe)  |        ✅        | medium（requires cpp knowledge） |   Medium（requires cpp knowledge）   |              Medium               |
-|                            Our                            |        ✅        |               ≈ 0                |           High +++++++++++           | Medium（with some optimizations） |
+⭐ 开箱即用，扩展性强，适合中小型项目快速部署
 
-### Quick Start
+|                                                           | Open Source 开源 |     Learning Curve 学习成本      | Developer Friendliness 二次开发友好度 | Performance 性能 |
+| :-------------------------------------------------------: | :--------------: | :------------------------------: | :-----------------------------------: | :--------------: |
+| [DeepStream](https://developer.nvidia.com/deepstream-sdk) |        ❌         |               High               |                  Low                  |       High       |
+| [VideoPipe](https://github.com/sherlockchou86/VideoPipe)  |        ✅         | medium（requires cpp knowledge） |   Medium（requires cpp knowledge）    |      Medium      |
+|                            Our                            |        ✅         |               ≈ 0                |           High +++++++++++            |      Medium      |
 
-##### 1. 准备运行环境
+## Quick Start
 
-本项目推荐 Docker 容器运行，首先确保本地环境满足以下三个条件
+本项目推荐 Docker 容器运行，首先确保本地环境满足以下三个条件：
 
 - Docker >= 24.0.0
-
 - NVIDIA Driver >= 590
-
 - NVIDIA Container Toolkit >= 1.13.0
 
-之后 clone 本项目，生成包含完整开发环境的镜像
+### 1. 生成镜像
+
+clone 本项目，生成包含完整开发环境的镜像
 
 ```bash
 git clone https://github.com/lmk123568/PyNvVideoPipe.git
 cd PyNvVideoPipe/docker
-docker build -t PyNvVideoPipe:cuda12.6 .
+docker build -t PyNvVideoPipe:cuda12.8 .
 ```
 
 镜像生成后，进入容器，不报错即成功
@@ -48,7 +48,7 @@ docker build -t PyNvVideoPipe:cuda12.6 .
 docker run -it \
   --gpus all \
   -e NVIDIA_DRIVER_CAPABILITIES=all \
-  -v /.../{your_path}/PyNvVideoPipe:/workspace \
+  -v {your_path}/PyNvVideoPipe:/workspace \
   PyNvVideoPipe:cuda12.6 \
   bash
 ```
@@ -57,25 +57,23 @@ docker run -it \
 
 > ⚠️ 不推荐自己本地装环境，如果一定要自己装，请参考 Dockerfile
 
-##### 2. 编译硬件编解码库
+### 2. 编译硬件编解码库
 
 ```bash
-cd /codec
-python setup.py install
+python scripts/setup.py install
 ```
 
-##### 3. 训练模型权重转换
+### 3. 训练模型权重转换
 
-将通过 [ultralytics](https://github.com/ultralytics/ultralytics) 训练的模型导入到`yolo26`目录下，示例模型为 [yolo26n.pt](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt)
+将通过 [ultralytics](https://github.com/ultralytics/ultralytics) 训练的`pt`模型导入到当前目录下（示例模型为 [yolo26n.pt](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt)）
 
 ```bash
-cd /yolo26
-python pt2trt.py  --w yolo26n.pt --fp16
+python scripts/pt2trt.py  --w ./yolo26n.pt --fp16
 ```
 
-> 💡 推理尺寸建议固定为`(576,1024)`，可以跳过`letterbox`降低计算开销
+> 💡 推理尺寸建议`(576,1024)`，可以跳过`letterbox`降低计算开销
 
-##### 4. 运行
+### 4. 运行
 
 开启 MPS（Multi-Process Service）
 
@@ -84,16 +82,13 @@ nvidia-cuda-mps-control -d
 # echo quit | nvidia-cuda-mps-control  关闭 MPS
 ```
 
-修改并运行代码
+阅读理解其代码并运行
 
 ```bash
-cd /workspace
 python main.py
 ```
 
-更多细节和技巧请阅读 `main.py` 注释
-
-### Benchmark
+## Benchmark
 
 测试日期: 2026-01-25
 
@@ -104,11 +99,14 @@ python main.py
 |                           | CPU     | RAM     | GPU VRAM | **GPU-Util** |
 | ------------------------- | ------- | ------- | -------- | ------------ |
 | VidepPipe（ffmpeg codec） | 511.6 % | 1.5 GiB | 2677 MiB | 16 %         |
-| Our                       | 40 %    | 1.2GiB  | 3932 MiB | 9 %           |
+| Our                       | 40 %    | 1.2GiB  | 3932 MiB | 12 %         |
 
 > 工程不是追求完美的数学解，而是在资源受限、时间紧迫、需求模糊的情况下，寻找一个可用的最优解
 
-### License
+## Pipeline
 
-[BSD 2-Clause](https://github.com/lmk123568/PyNvVideoPipe/blob/main/LICENSE)
+<img src="./assets/pipeline.png" alt="pipe" style="zoom:70%;" />
 
+## License
+
+[BSD-2-Clause](https://github.com/lmk123568/PyNvVideoPipe/blob/main/LICENSE)
