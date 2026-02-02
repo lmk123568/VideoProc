@@ -65,6 +65,8 @@ docker run -it \
 python scripts/setup.py install
 ```
 
+这里面包含了硬件编解码、YOLO26 推理优化的 C++ 实现，并通过 Pybind11 给 Python 调用
+
 ### 3. 训练模型权重转换
 
 将通过 [ultralytics](https://github.com/ultralytics/ultralytics) 训练的`pt`模型导入到当前目录下（示例模型为 [yolo26n.pt](https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt)）
@@ -74,6 +76,7 @@ python scripts/pt2trt.py  --w ./yolo26n.pt --fp16
 ```
 
 > 💡 TensorRT 编译生成 .engine 过程中，推理尺寸默认设置为`(576,1024)`，可以跳过`letterbox`降低计算开销
+> 💡 转换过程中会进行推理结果对齐
 
 ### 4. 运行
 
