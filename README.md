@@ -1,7 +1,7 @@
 <p style="" align="center">
   <img src="./assets/logo.png" alt="Logo" width="20%">
 </p>
-<h1 align="center">PyNvVideoPipe</h1>
+<h1 align="center">VidProc</h1>
 <p style="margin:0px" align="center">
     <img src="https://img.shields.io/badge/license-BSD--2-blue.svg?&logo=c&logoColor=white&style=for-the-badge">
     <img src="https://img.shields.io/badge/CUDA-12.8-76B900?&logo=nvidia&logoColor=white&style=for-the-badge">
@@ -10,19 +10,21 @@
 
 ---
 
-基于 NVIDIA CUDA 的 Python 高性能视频处理流水线实现
+VidProc 是一个基于 Python 的高性能多路视频处理流水线框架
 
-⭐ 多进程绕过 GIL 限制，支持多流、多 GPU 与多模型推理
+⭐ 多进程单线程绕过 GIL 限制，支持多视频流、多 GPU 与多模型推理
 
-⭐ 减少 Host-Device 数据拷贝和 GPU 显存冗余拷贝，提升推理效率
+⭐ 减少 Host-Device 数据传输，降低 GPU 显存冗余拷贝，提升推理速度
 
-⭐ 开箱即用，扩展性强，适合中小型项目快速部署
+⭐ 尽可能在 GPU 上计算，以降低 CPU 计算负担
 
-|                                                           | Open Source 开源 |     Learning Curve 学习成本      | Developer Friendliness 二次开发友好度 | Performance 性能 |
-| :-------------------------------------------------------: | :--------------: | :------------------------------: | :-----------------------------------: | :--------------: |
-| [DeepStream](https://developer.nvidia.com/deepstream-sdk) |        ❌         |               High               |                  Low                  |       High       |
-| [VideoPipe](https://github.com/sherlockchou86/VideoPipe)  |        ✅         | medium（requires cpp knowledge） |   Medium（requires cpp knowledge）    |      Medium      |
-|                            Our                            |        ✅         |               ≈ 0                |           High +++++++++++            |      Medium      |
+⭐ 开箱即用，简单易懂，扩展性强，适合中小型项目快速部署
+
+|                                                           | Open Source |          Learning Curve          |      Developer Friendliness      | Performance |      Architecture Design       |
+| :-------------------------------------------------------: | :---------: | :------------------------------: | :------------------------------: | :---------: | :----------------------------: |
+| [DeepStream](https://developer.nvidia.com/deepstream-sdk) |      ❌      |               High               |               Low                |    High     | Single-process, multi-threaded |
+| [VideoPipe](https://github.com/sherlockchou86/VideoPipe)  |      ✅      | medium（requires cpp knowledge） | Medium（requires cpp knowledge） |   Medium    | Single-process, multi-threaded |
+|                            Our                            |      ✅      |               ≈ 0                |         High +++++++++++         |   Medium    | Multi-process, single-threaded |
 
 ## Quick Start
 
@@ -37,9 +39,9 @@
 clone 本项目，生成包含完整开发环境的镜像
 
 ```bash
-git clone https://github.com/lmk123568/PyNvVideoPipe.git
-cd PyNvVideoPipe/docker
-docker build -t PyNvVideoPipe:cuda12.8 .
+git clone https://github.com/lmk123568/vidproc.git
+cd VidProc/docker
+docker build -t vidproc:cuda12.8 .
 ```
 
 镜像生成后，进入容器，不报错即成功
@@ -48,7 +50,7 @@ docker build -t PyNvVideoPipe:cuda12.8 .
 docker run -it \
   --gpus all \
   -e NVIDIA_DRIVER_CAPABILITIES=all \
-  -v {your_path}/PyNvVideoPipe:/workspace \
+  -v {your_path}/VidProc:/workspace \
   PyNvVideoPipe:cuda12.6 \
   bash
 ```
@@ -57,7 +59,7 @@ docker run -it \
 
 > ⚠️ 不推荐自己本地装环境，如果一定要自己装，请参考 Dockerfile
 
-### 2. 编译硬件编解码库
+### 2. 编译加速包
 
 ```bash
 python scripts/setup.py install
@@ -98,7 +100,7 @@ python main.py
 
 |                           | CPU     | RAM     | GPU VRAM | **GPU-Util** |
 | ------------------------- | ------- | ------- | -------- | ------------ |
-| VidepPipe（ffmpeg codec） | 511.6 % | 1.5 GiB | 2677 MiB | 16 %         |
+| VideoPipe（ffmpeg codec） | 511.6 % | 1.5 GiB | 2677 MiB | 16 %         |
 | Our                       | 40 %    | 1.2GiB  | 3932 MiB | 12 %         |
 
 > 工程不是追求完美的数学解，而是在资源受限、时间紧迫、需求模糊的情况下，寻找一个可用的最优解
