@@ -78,8 +78,8 @@ docker run -it \
 ### 2. 编译加速包
 
 ```bash
-python install .
-# python install -e .  # 开发模式
+pip install .
+# pip install -e .  # 开发模式
 ```
 
 这里面包含了硬件编解码、YOLO26 推理优化的 C++ 实现，并通过 Pybind11 给 Python 调用
